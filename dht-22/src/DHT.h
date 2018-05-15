@@ -1,8 +1,12 @@
-typedef struct DHTData {
-  int16_t temperature;
-  int16_t humidity;  // not sure if these will be signed or not, if the size is small enough it shouldn't matter (right?)
-}DHTData;
+#define PULSE_START 0
+#define PULSE_END   1
+#define DATA_LEN    41
 
-uint8 *read_dht(int data_pin);
-bool valid_data(uint8 *data);
-DHTData *parse_dht_data(uint8 *data);
+typedef struct DHTData {
+  uint8 temp;
+  uint8 temp_frac;
+  uint8 humidity;
+  uint8 humidity_frac;
+} DHTData;
+
+extern DHTData *read_dht(int data_pin);

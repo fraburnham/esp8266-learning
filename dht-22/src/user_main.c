@@ -17,18 +17,11 @@ static void user_procTask(os_event_t *events);
 static volatile os_timer_t some_timer;
 
 void some_timerfunc(void *arg) {
-  // src/user_main.c:18:21: warning: initialization makes pointer from integer without a cast [enabled by default]
-  uint8 *raw_data = (uint8*)read_dht(DATA_PIN);  // why am I warned to cast things w/ matching types?
-  
-  if(!valid_data(raw_data)) {
-    os_printf("Data invalid! Bad read!\n");
-  }
-
   // src/user_main.c:24:19: warning: initialization makes pointer from integer without a cast [enabled by default]
-  DHTData *data = (DHTData*)parse_dht_data(raw_data);  // why am I warned to cast things w/ matching types?
+  DHTData *data = (DHTData*)read_dht(DATA_PIN);  // why am I warned to cast things w/ matching types?
   
-  os_printf("Temp: %d\n", data->temperature);
-  os_printf("RH: %d\n", data->humidity);
+  os_printf("Temp: %d.%d\n", data->temp, data->temp_frac);
+  os_printf("RH: %d.%d\n", data->humidity, data->humidity_frac);
 }
 
 uint32 ICACHE_FLASH_ATTR user_rf_cal_sector_set(void) {
@@ -46,8 +39,9 @@ void ICACHE_FLASH_ATTR user_init() {
 
   gpio_init();
   PIN_FUNC_SELECT(PERIPHS_IO_MUX_GPIO5_U, FUNC_GPIO5);
-  gpio_output_set(DATA_PIN, 0, DATA_PIN, 0);
-  PIN_PULLUP_DIS(PERIPHS_IO_MUX_GPIO5_U);
+  PIN_FUNC_SELECT(PERIPHS_IO_MUX_GPIO4_U, FUNC_GPIO4);
+  gpio_output_set(BIT4, 0, BIT4, 0);
+  //PIN_PULLUP_DIS(PERIPHS_IO_MUX_GPIO5_U); // the pullup is built into my little device thing
 
   // src/user_main.c:46:3: warning: passing argument 1 of 'ets_timer_disarm' discards 'volatile' qualifier from pointer target type [enabled by default]
   os_timer_disarm(&some_timer);
