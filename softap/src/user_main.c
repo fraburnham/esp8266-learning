@@ -61,8 +61,51 @@ some_timerfunc(void *arg) {
 }
 
 LOCAL void ICACHE_FLASH_ATTR
+recv(void *arg, char *pdata, unsigned short len) {
+  os_printf("Got some data!\n");
+
+  struct espconn *conn = arg;
+
+  os_printf("\nGot: %s\n", pdata);
+
+  LOCAL char *body = "Hello world!";
+
+  LOCAL char *status_line = "HTTP/1.1 200 OK";
+  LOCAL char *server_line = "Server: WIP";
+  LOCAL char *content_type = "Content-Type: text/text";
+  LOCAL char head[256]; // probs needs protections, innit
+  os_sprintf(head,
+	     "%s\r\n%s\r\n%s\r\nContent-Length: %d\r\n",
+	     status_line, server_line, content_type, os_strlen(body));
+
+  LOCAL char response[512];
+  os_sprintf(response,
+	     "%s\r\n%s",
+	     head, body);
+
+  os_printf("Send status %d\n", espconn_send(conn, response, os_strlen(response)));
+}
+
+LOCAL void ICACHE_FLASH_ATTR
+recon(void *arg, sint8 err) {
+  os_printf("Got reconnect error\n");
+}
+
+LOCAL void ICACHE_FLASH_ATTR
+discon(void *arg) {
+  os_printf("Client disconnect\n");
+}
+
+LOCAL void ICACHE_FLASH_ATTR
 webserver_listen(void *arg) {
   os_printf("Got connection on port 80!\n");
+
+  // the example registers some failure callbacks and a data callback
+  struct espconn *conn = arg;
+
+  espconn_regist_recvcb(conn, &recv);
+  espconn_regist_reconcb(conn, &recon);
+  espconn_regist_disconcb(conn, &discon);
 }
 
 void ICACHE_FLASH_ATTR
